@@ -2,7 +2,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
+#include <math.h>
 
 #define INIT_CAPACITY 16
 
@@ -43,12 +43,17 @@ void r_array_append(r_array_t *arr, void *elem) {
     }
 }
 
-void r_array_get(r_array_t *arr, int idx, void *dst) {
+int r_array_get(r_array_t *arr, int idx, void *dst) {
+    if (idx < 0 || idx >= arr->log_size)
+        return -1;
+
     memcpy(
         dst,
         (char*) arr->base_ptr + (arr->elem_size * idx),
         arr->elem_size
     );
+
+    return 0;
 }
 
 int r_array_len(r_array_t *arr) {
@@ -67,6 +72,10 @@ void b_array_new(b_array_t *arr, int elem_size) {
     arr->buckets      = malloc(sizeof(void*) * INIT_CAPACITY);
     void *bucket      = malloc(elem_size * INIT_CAPACITY);
     arr->buckets[0]   = bucket;
+
+    arr->cache_b_start_idx = 0;
+    arr->cache_b_end_idx   = 16;
+    arr->cache_b_current   = 0;
 }
 
 void b_array_append(b_array_t *arr, void *elem) {
@@ -101,8 +110,35 @@ void b_array_append(b_array_t *arr, void *elem) {
     } 
 }
 
-void b_array_get(b_array_t *arr, int idx, void *dst) {
-    // TODO
+int b_array_get(b_array_t *arr, int idx, void *dst) {
+    if (idx < 0 || idx >= arr->log_len)
+        return -1;
+
+    int bucket_idx, offset;
+    if (idx < 16) {
+        bucket_idx = 0;
+        offset     = idx;
+    } else if (idx >= arr->cache_b_start_idx &&
+               idx <  arr->cache_b_end_idx) {
+        bucket_idx = arr->cache_b_current;
+        offset     = idx - arr->cache_b_start_idx;
+    } else {
+        bucket_idx    = ceil(log2(idx + 16 + 1) - 5);
+        int start_idx = (1 << (bucket_idx + 4)) - 16;
+        offset = idx - start_idx;
+        
+        arr->cache_b_start_idx = start_idx;
+        arr->cache_b_end_idx   = (1 << (bucket_idx + 5)) - 16;
+        arr->cache_b_current   = bucket_idx;
+    }
+
+    memcpy(
+        dst,
+        (char*) arr->buckets[bucket_idx] + (offset * arr->elem_size),
+        arr->elem_size
+    );
+
+    return 0;
 }
 
 int b_array_len(b_array_t *arr) {

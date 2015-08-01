@@ -1,5 +1,6 @@
 #include "dynarr.h"
 
+#include <assert.h>
 #include <stdio.h>
 #include <time.h>
 
@@ -24,6 +25,13 @@ void test_r_array() {
     for (int i = 0; i < TESTS; i++) {
         r_array_append(&arr, &i);
     }
+    
+    for (int i = 0; i < TESTS; i++) {
+        int res;
+        r_array_get(&arr, i, &res);
+        assert(res == i);
+    }
+
     clock_t end = clock();
     printf("[R] clock cycles: %lu\n", end - start);
     printf("[R] arr len: %d\n", r_array_len(&arr));
@@ -37,6 +45,13 @@ void test_b_array() {
     for (int i = 0; i < TESTS; i++) {
         b_array_append(&arr, &i);
     }
+
+    for (int i = 0; i < TESTS; i++) {
+        int res;
+        b_array_get(&arr, i, &res);
+        ssert(res == i);
+    }
+
     clock_t end = clock();
     printf("[B] clock cycles: %lu\n", end - start);
     printf("[B] arr len: %d\n", b_array_len(&arr));

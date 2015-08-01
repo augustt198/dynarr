@@ -9,7 +9,8 @@ typedef struct {
  
 void r_array_new    (r_array_t *arr, int elem_size);
 void r_array_append (r_array_t *arr, void *elem);
-void r_array_get    (r_array_t *arr, int idx, void *dst);
+// 0 if index in bounds, -1 if not
+int  r_array_get    (r_array_t *arr, int idx, void *dst);
 int  r_array_len    (r_array_t *arr);
 
 
@@ -29,9 +30,14 @@ typedef struct {
     int log_len;
 
     void **buckets;
+
+    int cache_b_start_idx;
+    int cache_b_end_idx;
+    int cache_b_current;
 } b_array_t;
 
 void b_array_new    (b_array_t *arr, int elem_size);
 void b_array_append (b_array_t *arr, void *elem);
-void b_array_get    (b_array_t *arr, int idx, void *dst);
+// 0 if index in bounds, -1 if not
+int  b_array_get    (b_array_t *arr, int idx, void *dst);
 int  b_array_len    (b_array_t *arr);
